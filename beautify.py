@@ -29,9 +29,10 @@ def parse_qa(qa_list):
     return results
 
 def main():
-    # data = pd.read_csv('./SampleData_NOC_2017.csv')
+    file_path = 'src/SampleData_NOC_2017.csv'
+    # data = pd.read_csv(file_path)
     # content = data['Content']
-    head = pd.read_csv('./SampleData_NOC_2017.csv').head(20)
+    head = pd.read_csv(file_path).head(20)
     content = head['Content']
     delimiter = '【###】>'
 
