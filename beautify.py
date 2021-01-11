@@ -1,5 +1,3 @@
-#! /usr/bin/env python3
-
 import pandas as pd
 import re
 
@@ -53,7 +51,20 @@ def parse_que(que):
     return results
 
 def parse_ans(ans):
-    return ans
+    results={}
+    key=['医师','内容']
+    tempstr=ans.split('大夫',1)[0]
+    results[key[0]]=tempstr
+    ans=ans.split('医师')
+    if len(ans)==1:
+        ans=['0','没回复大夫']
+        tempstr='大夫'
+    if '问题由' in ans[1]:
+        tempstr='问题由'
+    results[key[1]]=ans[1].split(tempstr)[0]
+    if results['内容']=='没回复':
+        results['医师']='机器人'
+    return results
 
 def parse_qa(qa_list):
     results = []
@@ -80,7 +91,7 @@ def main():
     file_path = 'src/SampleData_NOC_2017.csv'
     # data = pd.read_csv(file_path)
     # content = data['Content']
-    head = pd.read_csv(file_path).head(20)
+    head = pd.read_csv(file_path,encoding='gb18030').head(400)
     content = head['Content']
     delimiter = '【###】>'
 
