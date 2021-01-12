@@ -62,7 +62,10 @@ def parse_ans(ans):
     if temp:
         results['医师'] = temp.group(1)
         results['医院'] = temp.group(3)
-        results['内容'] = temp.group(4).split(results['医师'])[0]
+        if results['医师']:
+            results['内容'] = temp.group(4).split(results['医师'])[0]
+        else:
+            results['内容'] = temp.group(4)
         results['时间'] = temp.group(2)
 
     # key=['医师','内容']
@@ -103,11 +106,11 @@ def parse_qa(qa_list):
 
 def main():
     file_path = 'src/SampleData_NOC_2017.csv'
-    # data = pd.read_csv(file_path)
-    # content = data['Content']
+    data = pd.read_csv(file_path)
+    content = data['Content']
     # head = pd.read_csv(file_path,encoding='gb18030').head(400)
-    head = pd.read_csv(file_path).head(400)
-    content = head['Content']
+    # head = pd.read_csv(file_path).head(400)
+    # content = head['Content']
     delimiter = '【###】>'
 
     print(len(content))
