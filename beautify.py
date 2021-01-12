@@ -1,3 +1,5 @@
+#! /usr/bin/env python3
+
 import pandas as pd
 import re
 
@@ -42,34 +44,45 @@ def parse_que(que):
     # 分离时间
     ptn = re.compile(r'(.*?)(\d{4}-\d{2}-\d{2})(.*)')
     text = results.get('状态')
-    results['状态'] = re.search(ptn, text).group(1)
-    results['时间'] = re.search(ptn, text).group(2)
-    # 若是追问，分离追问内容
-    temp = re.search(ptn, text).group(3)
-    if temp:
-        results['内容'] = temp
+    if text:
+        results['状态'] = re.search(ptn, text).group(1)
+        results['时间'] = re.search(ptn, text).group(2)
+        # 若是追问，分离追问内容
+        temp = re.search(ptn, text).group(3)
+        if temp:
+            results['内容'] = temp
     return results
 
 def parse_ans(ans):
     results={}
-    key=['医师','内容']
-    tempstr=ans.split('大夫',1)[0]
-    results[key[0]]=tempstr
-    ans=ans.split('医师')
-    if len(ans)==1:
-        ans=['0','没回复大夫']
-        tempstr='大夫'
-    if '问题由' in ans[1]:
-        tempstr='问题由'
-    results[key[1]]=ans[1].split(tempstr)[0]
-    if results['内容']=='没回复':
-        results['医师']='机器人'
+
+    ptn = re.compile(r'(.*?)(\d{4}-\d{2}-\d{2})(.*?-.*?-.*?医师)(.*)')
+    temp = re.search(ptn, ans)
+
+    if temp:
+        results['医师'] = temp.group(1)
+        results['医院'] = temp.group(3)
+        results['内容'] = temp.group(4).split(results['医师'])[0]
+        results['时间'] = temp.group(2)
+
+    # key=['医师','内容']
+    # tempstr=ans.split('大夫',1)[0]
+    # results[key[0]]=tempstr
+    # ans=ans.split('医师')
+    # if len(ans)==1:
+    #     ans=['0','没回复大夫']
+    #     tempstr='大夫'
+    # if '问题由' in ans[1]:
+    #     tempstr='问题由'
+    # results[key[1]]=ans[1].split(tempstr)[0]
+    # if results['内容']=='没回复':
+    #     results['医师']='机器人'
     return results
 
 def parse_qa(qa_list):
     results = []
     # 遍历一个对话，将解析的对话列表作为一个字典，存入results
-    for i, item in enumerate(qa_list):
+    for item in qa_list:
         piece = {}
         # 若某条对话是空字符或None则跳过
         if not item:
@@ -82,6 +95,7 @@ def parse_qa(qa_list):
         # 这一条为回答
         else:
             piece['is_que'] = 0
+            # piece['desc'] = parse_nothing(item)
             piece['desc'] = parse_ans(item)
         # 将此条加入结果集
         results.append(piece)
@@ -91,7 +105,8 @@ def main():
     file_path = 'src/SampleData_NOC_2017.csv'
     # data = pd.read_csv(file_path)
     # content = data['Content']
-    head = pd.read_csv(file_path,encoding='gb18030').head(400)
+    # head = pd.read_csv(file_path,encoding='gb18030').head(400)
+    head = pd.read_csv(file_path).head(400)
     content = head['Content']
     delimiter = '【###】>'
 
@@ -102,12 +117,13 @@ def main():
     # print()
     print()
 
-    for item in content:
+    for (i, item) in enumerate(content, 1):
         qa = item.split(delimiter)
         results = parse_qa(qa)
 
+        print(i)
         for res in results:
-            # if res.get('is_que'):
+            # if not res.get('is_que'):
             #     print(res.get('desc'))
             print(res)
         print()
