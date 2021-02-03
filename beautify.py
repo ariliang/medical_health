@@ -2,6 +2,8 @@
 
 import pandas as pd
 import re
+import json
+import os
 
 
 def parse_nothing(text):
@@ -105,31 +107,47 @@ def parse_qa(qa_list):
     return results
 
 def main():
-    file_path = 'src/SampleData_NOC_2017.csv'
-    data = pd.read_csv(file_path)
-    content = data['Content']
+    # data = pd.read_csv(src_file, encoding='gb2312')
+    # data = pd.read_csv(src_file)
+    # content = data['Content']
     # head = pd.read_csv(file_path,encoding='gb18030').head(400)
     # head = pd.read_csv(file_path).head(400)
     # content = head['Content']
+    list_src_file = [ item.split('.')[0] for item in os.listdir('noc_2017')]
+    
     delimiter = '【###】>'
 
-    print(len(content))
-    # for item in content:
-    #     print(item)
-    #     print()
-    # print()
+    num_file = 1
+    num_item = 1
+    chunksize = 10**4
+
+    for src_file in list_src_file:
+        src_file_path = 'noc_2017/%s.csv' % src_file
+        for chunk in pd.read_csv(src_file_path, chunksize=chunksize):
+            content = chunk['Content']
+
+            for item in content:
+                print('\r', '第%d个文件，第%d个条目' % (num_file, num_item), sep='', end='')
+                num_item += 1
+                try:
+                    qa = item.split(delimiter)
+                    results = parse_qa(qa)
+
+                    dest_file = 'src/result%s.txt' % src_file
+                    with open(dest_file, 'a', encoding='utf8') as f:
+                        f.write(json.dumps(results, ensure_ascii=False))
+                        f.write('\n')
+                        f.close()
+
+                except Exception:
+                    with open('src/failed.txt', 'a', encoding='utf8') as f:
+                        f.write(item)
+                        f.write('\n')
+                        f.close()
+                    continue
+        num_file += 1
+        
     print()
-
-    for (i, item) in enumerate(content, 1):
-        qa = item.split(delimiter)
-        results = parse_qa(qa)
-
-        print(i)
-        for res in results:
-            # if not res.get('is_que'):
-            #     print(res.get('desc'))
-            print(res)
-        print()
 
 if __name__ == '__main__':
     main()
